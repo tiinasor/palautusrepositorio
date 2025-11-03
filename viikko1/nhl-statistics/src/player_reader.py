@@ -1,5 +1,5 @@
 from urllib import request
-from player import Player
+from src.player import Player
 
 class PlayerReader:
     def __init__(self, url):

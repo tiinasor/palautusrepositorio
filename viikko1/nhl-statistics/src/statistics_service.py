@@ -1,4 +1,4 @@
-from player_reader import PlayerReader
+from src.player_reader import PlayerReader
 
 
 
@@ -34,7 +34,7 @@ class StatisticsService:
 
         result = []
         i = 0
-        while i <= how_many:
+        while i < how_many + 1 and i < len(sorted_players):
             result.append(sorted_players[i])
             i += 1
 
