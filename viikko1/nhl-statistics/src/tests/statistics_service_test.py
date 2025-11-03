@@ -1,5 +1,5 @@
 import unittest
-from src.statistics_service import StatisticsService
+from src.statistics_service import StatisticsService, SortBy
 from src.player import Player
 
 class PlayerReaderStub:
@@ -56,3 +56,27 @@ class TestStatisticsService(unittest.TestCase):
     def test_top_returns_all_players_if_how_many_exceeds_player_count(self):
         top_players = self.stats.top(10)
         self.assertEqual(len(top_players), 5)  # All players from stub
+
+    def test_top_by_points_returns_players_in_correct_order(self):
+        top_players = self.stats.top(3, SortBy.POINTS)
+        self.assertEqual(len(top_players), 4)
+        self.assertEqual(top_players[0].name, "Gretzky")  # 124 points
+        self.assertEqual(top_players[1].name, "Lemieux")  # 99 points
+        self.assertEqual(top_players[2].name, "Yzerman")  # 98 points
+        self.assertEqual(top_players[3].name, "Kurri")    # 90 points
+
+    def test_top_by_goals_returns_players_in_correct_order(self):
+        top_players = self.stats.top(3, SortBy.GOALS)
+        self.assertEqual(len(top_players), 4)
+        self.assertEqual(top_players[0].name, "Lemieux")  # 45 goals
+        self.assertEqual(top_players[1].name, "Yzerman")  # 42 goals
+        self.assertEqual(top_players[2].name, "Kurri")    # 37 goals
+        self.assertEqual(top_players[3].name, "Gretzky")  # 35 goals
+
+    def test_top_by_assists_returns_players_in_correct_order(self):
+        top_players = self.stats.top(3, SortBy.ASSISTS)
+        self.assertEqual(len(top_players), 4)
+        self.assertEqual(top_players[0].name, "Gretzky")  # 89 assists
+        self.assertEqual(top_players[1].name, "Yzerman")  # 56 assists
+        self.assertEqual(top_players[2].name, "Lemieux")  # 54 assists
+        self.assertEqual(top_players[3].name, "Kurri")    # 53 assists
