@@ -6,8 +6,11 @@ class Player:
         self.goals = data.get('goals', 0)
         self.team = data.get('team', '')
         self.games = data.get('games', 0)
-        self.id = data.get('id', None)
+        self.player_id = data.get('id', None)
 
     def __str__(self):
         points = self.goals + self.assists
         return f"{self.name:<20} {self.team:<15} {self.goals} + {self.assists} = {points}"
+
+    def points(self) -> int:
+        return self.goals + self.assists

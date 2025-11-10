@@ -1,7 +1,7 @@
 import requests
-from player import Player
 from rich.console import Console
 from rich.table import Table
+from player import Player
 
 BASE_URL = "https://studies.cs.helsinki.fi/nhlstats"
 
@@ -11,8 +11,12 @@ class PlayerReader:
         self.url = f"{BASE_URL}/{season}/players"
 
     def get_players(self):
-        response = requests.get(self.url).json()
-        return [Player(d) for d in response]
+        response = requests.get(self.url, timeout=10)
+        response.raise_for_status()
+        return [Player(d) for d in response.json()]
+
+    def players(self):
+        return self.get_players()
 
 class PlayerStats:
     def __init__(self, reader: PlayerReader):
@@ -25,13 +29,23 @@ class PlayerStats:
 
     def print_stats(self, nationality: str):
         console = Console()
+        header, table = self._build_tables(nationality)
 
+        console.print(header)
+        console.print(table)
+
+    def _build_tables(self, nationality: str):
         table = Table(show_header=True, padding=(0, 2))
-        table.add_column("Released", style="cyan")
-        table.add_column("teams", style="magenta")
-        table.add_column("goals", justify="right", style="green")
-        table.add_column("assists", justify="right", style="green")
-        table.add_column("points", justify="right", style="green")
+        columns = [
+            ("Released", {"style": "cyan"}),
+            ("teams", {"style": "magenta"}),
+            ("goals", {"justify": "right", "style": "green"}),
+            ("assists", {"justify": "right", "style": "green"}),
+            ("points", {"justify": "right", "style": "green"}),
+        ]
+
+        for col_name, col_opts in columns:
+            table.add_column(col_name, **col_opts)
 
         for player in self.top_scorers_by_nationality(nationality):
             table.add_row(
@@ -42,9 +56,14 @@ class PlayerStats:
                 str(player.goals + player.assists),
             )
 
-        header = Table(show_header=False, width=len(table.columns) * 12, padding=(0,0), show_edge=False, show_lines=False)
+        header = Table(
+            show_header=False,
+            width=len(table.columns) * 12,
+            padding=(0, 0),
+            show_edge=False,
+            show_lines=False,
+        )
         header.add_column("header", justify="center")
         header.add_row(f"[italic]Season {self.reader.season} players from {nationality}[/italic]")
 
-        console.print(header)
-        console.print(table)
+        return header, table
