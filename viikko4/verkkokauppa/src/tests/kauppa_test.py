@@ -92,3 +92,54 @@ class TestKauppa(unittest.TestCase):
         # varmistetaan, että metodia tilisiirto on kutsuttu oikeilla parametreilla
         # summa on vain 5, koska jäätelö oli loppu
         self.pankki_mock.tilisiirto.assert_called_with("pekka", 42, "12345", "33333-44455", 5)
+
+    def test_aloita_asiointi_kutsuminen_nollaa_edellisen_ostoksen_tiedot(self):
+        # tehdään ensimmäinen ostos
+        self.kauppa.aloita_asiointi()
+        self.kauppa.lisaa_koriin(1)
+        self.kauppa.tilimaksu("pekka", "12345")
+
+        # tehdään toinen ostos
+        self.kauppa.aloita_asiointi()
+        self.kauppa.lisaa_koriin(2)
+        self.kauppa.tilimaksu("pekka", "12345")
+
+        # varmistetaan, että toisen ostoksen summa on vain 3, ei 5 + 3
+        self.pankki_mock.tilisiirto.assert_called_with("pekka", 42, "12345", "33333-44455", 3)
+
+    def test_kauppa_pyytaa_uuden_viitenumeron_jokaiselle_maksutapahtumalle(self):
+        # muutetaan viitegeneraattori palauttamaan eri arvoja
+        self.viitegeneraattori_mock.uusi.side_effect = [1, 2, 3]
+
+        # tehdään ensimmäinen ostos
+        self.kauppa.aloita_asiointi()
+        self.kauppa.lisaa_koriin(1)
+        self.kauppa.tilimaksu("pekka", "12345")
+
+        # tarkistetaan että ensimmäisessä kutsussa käytettiin viitettä 1
+        self.pankki_mock.tilisiirto.assert_called_with("pekka", 1, "12345", "33333-44455", 5)
+
+        # tehdään toinen ostos
+        self.kauppa.aloita_asiointi()
+        self.kauppa.lisaa_koriin(2)
+        self.kauppa.tilimaksu("pekka", "12345")
+
+        # tarkistetaan että toisessa kutsussa käytettiin viitettä 2
+        self.pankki_mock.tilisiirto.assert_called_with("pekka", 2, "12345", "33333-44455", 3)
+
+        # varmistetaan että viitegeneraattorin metodia uusi on kutsuttu kaksi kertaa
+        self.assertEqual(self.viitegeneraattori_mock.uusi.call_count, 2)
+
+    def test_poista_korista_poistaa_tuotteen_ostoskorista(self):
+        # tehdään ostokset
+        self.kauppa.aloita_asiointi()
+        self.kauppa.lisaa_koriin(1)
+        self.kauppa.lisaa_koriin(2)
+        
+        # poistetaan tuote 1 korista
+        self.kauppa.poista_korista(1)
+        
+        self.kauppa.tilimaksu("pekka", "12345")
+
+        # varmistetaan että tilisiirron summa on vain 3 (sipsit), koska maito poistettiin
+        self.pankki_mock.tilisiirto.assert_called_with("pekka", 42, "12345", "33333-44455", 3)
