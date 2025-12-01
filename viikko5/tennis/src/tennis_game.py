@@ -1,55 +1,82 @@
 class TennisGame:
+    LOVE = 0
+    FIFTEEN = 1
+    THIRTY = 2
+    FORTY = 3
+    DEUCE_THRESHOLD = 4
+    ADVANTAGE_DIFFERENCE = 1
+
     def __init__(self, player1_name, player2_name):
         self.player1_name = player1_name
         self.player2_name = player2_name
-        self.m_score1 = 0
-        self.m_score2 = 0
+        self.player1_score = 0
+        self.player2_score = 0
 
     def won_point(self, player_name):
         if player_name == "player1":
-            self.m_score1 = self.m_score1 + 1
+            self.player1_score += 1
         else:
-            self.m_score2 = self.m_score2 + 1
+            self.player2_score += 1
 
     def get_score(self):
-        score = ""
-        temp_score = 0
-
-        if self.m_score1 == self.m_score2:
-            if self.m_score1 == 0:
-                score = "Love-All"
-            elif self.m_score1 == 1:
-                score = "Fifteen-All"
-            elif self.m_score1 == 2:
-                score = "Thirty-All"
-            else:
-                score = "Deuce"
-        elif self.m_score1 >= 4 or self.m_score2 >= 4:
-            minus_result = self.m_score1 - self. m_score2
-
-            if minus_result == 1:
-                score = "Advantage player1"
-            elif minus_result == -1:
-                score = "Advantage player2"
-            elif minus_result >= 2:
-                score = "Win for player1"
-            else:
-                score = "Win for player2"
+        if self.is_tied_score():
+            return self.get_tied_score_text()
+        elif self.is_endgame():
+            return self.get_endgame_score_text()
         else:
-            for i in range(1, 3):
-                if i == 1:
-                    temp_score = self.m_score1
-                else:
-                    score = score + "-"
-                    temp_score = self.m_score2
+            return self.get_regular_score_text()
 
-                if temp_score == 0:
-                    score = score + "Love"
-                elif temp_score == 1:
-                    score = score + "Fifteen"
-                elif temp_score == 2:
-                    score = score + "Thirty"
-                elif temp_score == 3:
-                    score = score + "Forty"
+    def is_tied_score(self):
+        return self.player1_score == self.player2_score
 
-        return score
+    def is_endgame(self):
+        return self.player1_score >= self.DEUCE_THRESHOLD or self.player2_score >= self.DEUCE_THRESHOLD
+
+    def get_tied_score_text(self):
+        tied_scores = {
+            self.LOVE: "Love-All",
+            self.FIFTEEN: "Fifteen-All",
+            self.THIRTY: "Thirty-All"
+        }
+        return tied_scores.get(self.player1_score, "Deuce")
+
+    def get_endgame_score_text(self):
+        score_difference = self.get_score_difference()
+
+        if self.has_advantage():
+            return self.get_advantage_text(score_difference)
+        else:
+            return self.get_winner_text(score_difference)
+
+    def get_score_difference(self):
+        return self.player1_score - self.player2_score
+
+    def has_advantage(self):
+        score_difference = abs(self.get_score_difference())
+        return score_difference == self.ADVANTAGE_DIFFERENCE
+
+    def get_advantage_text(self, score_difference):
+        if score_difference > 0:
+            return "Advantage player1"
+        else:
+            return "Advantage player2"
+
+    def get_winner_text(self, score_difference):
+        if score_difference > 0:
+            return "Win for player1"
+        else:
+            return "Win for player2"
+
+    def get_regular_score_text(self):
+        player1_text = self.convert_score_to_text(self.player1_score)
+        player2_text = self.convert_score_to_text(self.player2_score)
+        return f"{player1_text}-{player2_text}"
+
+    def convert_score_to_text(self, score):
+        score_names = {
+            self.LOVE: "Love",
+            self.FIFTEEN: "Fifteen",
+            self.THIRTY: "Thirty",
+            self.FORTY: "Forty"
+        }
+        return score_names.get(score, "")
